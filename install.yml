@@ -1,0 +1,11 @@
+---
+- name: mysql
+  import_playbook: mysql.yml
+- name: nginx
+  import_playbook: nginx.yml
+- name: php
+  import_playbook: php.yml
+- name: imap
+  import_playbook: dovecot.yml
+- name: smtp
+  import_playbook: exim.yml

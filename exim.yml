@@ -1,0 +1,66 @@
+---
+- name: Installing
+  hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    packages:
+      - exim4-base
+      - exim4-config
+      - exim4-daemon-heavy
+      - exim4
+      - spamassassin
+
+  tasks:
+    - name: install exim
+      apt:
+        pkg: "{{ packages }}"
+        state: present
+    - name: backup default exim  configuration
+      shell: /bin/cp -r  /etc/exim4 /etc/exim4_distr
+
+    - name: copy exim  configuration
+      shell: /bin/cp -r templates/exim4 /etc/
+
+      # - name: "create directory"
+      # file:
+      # path: /opt/afterlogic/var/log/dovecot/
+      # state: directory
+      # mode: '0775'
+      # owner: afterlogic
+      # group: afterlogic
+
+    - name: chown
+      file:
+        path: /var/spool/exim4
+        state: directory
+        recurse: yes
+        owner: afterlogic
+        group: afterlogic
+        mode: '0755'
+
+    - name: Restart exim
+      service:
+        name: exim4 
+        state: restarted
+
+    - name: Restart spamassassin
+      service:
+        name: spamassassin
+        state: restarted
+
+    - name: Enable service exim4
+      service:
+        name: exim4
+        enabled: yes
+    - name: Enable service spamassassin
+      service:
+        name: spamassassin
+        enabled: yes
+
+
+  handlers:
+    - name: restart exim
+      service:
+        name: exim4
+        state: restarted

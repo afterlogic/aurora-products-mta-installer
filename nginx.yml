@@ -1,0 +1,102 @@
+---
+- name: Install nginx
+  hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    product_param: "{{ product | default('mailsuite') }}"
+    product_name: "{{ 'aurora' if product_param == 'aurora' else 'mailsuite' }}"
+    product_file: "{{ 'aurora-corporate-mta' if product_name == 'aurora' else 'webmail-pro-mta' }}"
+    mysql_root_pass: "mailbundle"
+    packages:
+      - python3-mysqldb
+      - mysql-server
+
+  tasks: 
+  - name: Add the group 
+    group:
+      name: afterlogic
+      state: present
+      gid: 3000
+
+  - name: Add the user  
+    user:
+      home: /opt/afterlogic
+      name: afterlogic
+      uid: 3000
+      group: afterlogic
+
+  - name: "install nginx"
+    apt:
+      name: ['nginx']
+      state: latest
+
+  - name: "create logs directory"
+    file:
+      path: /opt/afterlogic/var/log/nginx/
+      state: directory
+      mode: '0775'
+      owner: afterlogic
+      group: afterlogic
+
+  - name: "create www directory"
+    file:
+      path: /opt/afterlogic/html
+      state: directory
+      recurse: yes
+      mode: '0775'
+      owner: afterlogic
+      group: afterlogic
+
+  - name: delete default nginx site
+    file:
+      path: /etc/nginx/sites-enabled/default
+      state: absent
+    notify: restart nginx
+
+  - name: copy php-fpm.conf
+    template:
+      src: templates/php-fpm-nginx.conf.j2
+      dest: /etc/nginx/conf.d/php-fpm.conf
+
+  - name: copy nginx afterlogic-webmail.conf
+    template:
+      src: templates/afterlogic-webmail.conf.j2
+      dest: /etc/nginx/sites-enabled/afterlogic-webmail
+      # owner: root
+      # group: root
+      # mode: '0644'
+      # notify: restart nginx
+
+  - name: Replace NGINX config
+    template: 
+      src=templates/nginx.conf.j2
+      dest=/etc/nginx/nginx.conf
+
+  - name: Copy html 
+    unarchive:  
+      src: https://afterlogic.com/download/{{product_file}}.zip
+      dest: /opt/afterlogic/html/
+      remote_src: yes
+      group: afterlogic
+      owner: afterlogic
+ 
+  - name: Data owner
+    shell: /bin/chown afterlogic:afterlogic -R /opt/afterlogic/html/data/
+
+  - name: Restart nginx
+    service: 
+      name: nginx
+      state: restarted
+
+  - name: Enable service nginx
+    service:
+      name: nginx
+      enabled: yes
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+

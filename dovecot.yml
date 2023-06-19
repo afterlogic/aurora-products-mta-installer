@@ -1,0 +1,82 @@
+---
+- name: Installing
+  hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    packages:
+      - dovecot-core
+      - dovecot-imapd
+      - dovecot-lmtpd
+      - dovecot-managesieved
+      - dovecot-mysql
+      - dovecot-pop3d
+      - dovecot-sieve
+      - dovecot-solr
+
+  tasks:
+    - name: install dovecot
+      apt:
+        pkg: "{{ packages }}"
+        state: present
+    - name: backup default dovecot  configuration
+      shell: /bin/cp -r  /etc/dovecot /etc/dovecot_distr
+
+    - name: copy dovecot  configuration
+      shell: /bin/cp -r templates/dovecot /etc/
+
+    - name: bug
+      shell: rm -rf /etc/dovecot/conf.d/15-mailboxes.conf
+
+    - name: "create directory"
+      file:
+        path: /opt/afterlogic/var/log/dovecot/
+        state: directory
+        mode: '0775'
+        owner: afterlogic
+        group: afterlogic
+
+
+    - name: Copy scripts
+      copy:
+        src: templates/scripts
+        dest: /opt/afterlogic/
+        group: afterlogic
+        owner: afterlogic
+
+    - name: chown
+      file:
+        path: /opt/afterlogic/scripts
+        state: directory
+        recurse: yes
+        owner: afterlogic
+        group: afterlogic
+        mode: '0755'
+
+
+    - name: chown
+      file:
+        path: /opt/afterlogic/data
+        state: directory
+        recurse: yes
+        owner: afterlogic
+        group: afterlogic
+        mode: '0755'
+
+
+
+    - name: Restart dovecot
+      service:
+        name: dovecot
+        state: restarted
+
+    - name: Enable service dovecot
+      service:
+        name: dovecot
+        enabled: yes
+
+  handlers:
+    - name: restart dovecot
+      service:
+        name: dovecot
+        state: restarted
