@@ -5,7 +5,7 @@
   become: true
   vars:
     product_param: "{{ product | default('mailsuite') }}"
-    product_name: "{{ 'aurora' if product_param == 'aurora' else 'mailsuite' }}
+    product_name: "{{ 'aurora' if product_param == 'aurora' else 'mailsuite' }}"
     packages:
       - php7.4-cli
       - php7.4-curl
