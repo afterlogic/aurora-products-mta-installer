@@ -4,8 +4,6 @@
   gather_facts: true
   become: true
   vars:
-    product_param: "{{ product | default('mailsuite') }}"
-    product_name: "{{ 'aurora' if product_param == 'aurora' else 'mailsuite' }}"
     packages:
       - php7.4-cli
       - php7.4-curl
@@ -78,7 +76,7 @@
          state: restarted         
 
     - name: Update DB
-      command: sudo -u afterlogic /bin/php -f templates/scripts/dbupdate-{{product_name}}.php
+      command: sudo -u afterlogic /bin/php -f templates/scripts/dbupdate.php
 
     - name: Data owner
       shell: /bin/chown afterlogic:afterlogic -R /opt/afterlogic/html/data/
