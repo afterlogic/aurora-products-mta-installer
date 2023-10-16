@@ -5,17 +5,17 @@
   become: true
   vars:
     packages:
-      - php7.4-cli
-      - php7.4-curl
-      - php7.4-common
-      - php7.4-fpm
-      - php7.4-gd
-      - php7.4-json
-      - php7.4-mbstring
-      - php7.4-mysql
-      - php7.4-opcache
-      - php7.4-readline
-      - php7.4-xml
+      - php-cli
+      - php-curl
+      - php-common
+      - php-fpm
+      - php-gd
+      - php-json
+      - php-mbstring
+      - php-mysql
+      - php-opcache
+      - php-readline
+      - php-xml
 
   tasks:
     - name: install php-fpm
@@ -23,7 +23,7 @@
         pkg: "{{ packages }}"
         state: present
     - name: backup default php configuration
-      shell: /bin/cp -r  /etc/php/7.4 /etc/php/7.4_distr
+      shell: /bin/cp -r  /etc/php/8.1 /etc/php/8.1_distr
 
     - name: "create directory"
       file:
@@ -52,22 +52,22 @@
     - name: copy php.ini
       template:
         src: templates/php.ini.j2
-        dest: /etc/php/7.4/fpm/php.ini
+        dest: /etc/php/8.1/fpm/php.ini
 
     - name: copy php-fpm.conf
       template:
         src: templates/php-fpm.conf.j2
-        dest: /etc/php/7.4/fpm/php-fpm.conf
+        dest: /etc/php/8.1/fpm/php-fpm.conf
 
     - name: copy www.conf
       # template:
       # src: "templates/www.conf.j2"
-      # dest: "/etc/php/7.4/fpm/pool.d/www.conf"
-      shell:  /bin/cp templates/www.conf.j2 /etc/php/7.4/fpm/pool.d/www.conf
+      # dest: "/etc/php/8.1/fpm/pool.d/www.conf"
+      shell:  /bin/cp templates/www.conf.j2 /etc/php/8.1/fpm/pool.d/www.conf
 
-    - name: Restart php7.4-fpm
+    - name: Restart php8.1-fpm
       service:
-         name: php7.4-fpm
+         name: php8.1-fpm
          state: restarted
 
     - name: Restart nginx
@@ -81,16 +81,16 @@
     - name: Data owner
       shell: /bin/chown afterlogic:afterlogic -R /opt/afterlogic/html/data/
 
-    - name: Enable service php7.4-fpm
+    - name: Enable service php8.1-fpm
       service:
-        name: php7.4-fpm
+        name: php8.1-fpm
         enabled: yes
 
     - name: Enable cron
       shell: (crontab -l 2>/dev/null; cat templates/scripts/cron-root)| crontab -
 
   handlers:
-    - name: restart php7.4-fpm
+    - name: restart php8.1-fpm
       service:
-        name: php7.4-fpm
+        name: php8.1-fpm
         state: restarted
